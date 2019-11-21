@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>函数柯里化</title>
+</head>
+<body>
+	<script type="text/javascript">
+		//柯里化是一种将使用多个参数的一个函数转换成一系列使用一个参数的函数的技术,用于简化代码结构，提高系统的维护性
+
+		function add(a,b,c,d,e){
+			return a + b + c + d;
+		}
+
+		
+		//整合参数
+		function FixedParamCurry(fn){
+			var _arg = [].slice.call(arguments,1);
+			return function(){
+				//
+				var newArg = _arg.concat( [].slice.call(arguments,0) );
+
+				return fn.apply(this,newArg);
+			}
+		}
+
+
+		//实现柯里化
+		function Curry(fn,length){
+			//fn.length为add设定的形参数
+			var length = length || fn.length;	//这个length代表期望传的参数量(不一定要达到)
+			return function(){
+				if(arguments.length < length){
+					//生成FixedParamCurry的参数
+					var combined = [fn].concat([].slice.call(arguments,0));
+					/*
+						如果直接返回FixedParamCurry.apply(this,combined),则后面的调用一定要传满参数,如果返回的是Curry函数,就不一定要传满参数,但此时对于Curry函数来说fn.length就是undefined了,因为FixedParamCurry返回一个匿名函数,所以我们手动输入length值
+
+						这里很难,建议画纸上一步一步确认Curry返回函数的fn所指和调用FixedParamCurry返回的函数的fn所指
+					*/
+					return Curry( FixedParamCurry.apply(this,combined),length - arguments.length);
+				}else{
+					//如果所传参数大于或等于length,直接执行fn
+					return fn.apply(this,arguments);
+				}
+			}
+		}
+
+		var newAdd = Curry(add);	//初始化
+		console.log(newAdd(1,2)(3,4)(5))
+
+		//应用柯里化 以下为实例代码
+		// function ajax(type,url,data){
+		// 	var xhr = new XMLHttpRequest();
+		// 	xhr.open(type,url,true);
+		// 	xhr.send(data);
+		// }
+
+		// //虽然ajax函数很通用,但重复调用参数就冗余
+		// ajax('POST','www.test.com','name=kevin')
+		// ajax('POST','www.test1.com','name=kevin')
+		// ajax('POST','www.test2.com','name=kevin')
+
+		// //可以利用curry(这里的curry要自己写)
+		// var ajaxCurry = curry(ajax);
+
+		// //以POST类型请求数据
+		// var post = ajaxCurry('POST');
+		// post('www.test.com','name=kevin')
+		// post('www.test2.com','name=kevin')
+
+		// //以POST类型请求来自于www.test.com的数据
+		// var postFromTest = post('www.test.com');
+		// postFromTest('name=kevin');
+		// postFromTest('name=kevin2');
+	</script>
+</body>
+</html>
